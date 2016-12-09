@@ -97,6 +97,9 @@ static int luv_udp_bind(lua_State* L) {
     lua_getfield(L, 4, "ipv6only");
     if (lua_toboolean(L, -1)) flags |= UV_UDP_IPV6ONLY;
     lua_pop(L, 1);
+    lua_getfield(L, 4, "pktinfo");
+    if (lua_toboolean(L, -1)) flags |= UV_UDP_PKTINFO;
+    lua_pop(L, 1);
   }
   ret = uv_udp_bind(handle, (struct sockaddr*)&addr, flags);
   return luv_result(L, ret);
@@ -272,7 +275,7 @@ static int luv_udp_try_send(lua_State* L) {
   return 1;
 }
 
-static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
+static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* dest_addr, const struct sockaddr* src_addr, unsigned flags) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
   lua_State* L = data->ctx->L;
 
@@ -286,7 +289,7 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
 
   // data
   if (nread == 0) {
-    if (addr) {
+    if (src_addr) {
       lua_pushstring(L, "");
     }
     else {
@@ -310,8 +313,8 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
 #endif
 
   // address
-  if (addr) {
-    parse_sockaddr(L, (struct sockaddr_storage*)addr);
+  if (src_addr) {
+    parse_sockaddr(L, (struct sockaddr_storage*)src_addr);
   }
   else {
     lua_pushnil(L);
@@ -330,7 +333,15 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
   }
 #endif
 
-  luv_call_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 4);
+  // address
+  if (dest_addr) {
+    parse_sockaddr(L, (struct sockaddr_storage*)dest_addr);
+  }
+  else {
+    lua_pushnil(L);
+  }
+
+  luv_call_callback(L, handle->data, LUV_RECV, 5);
 }
 
 static int luv_udp_recv_start(lua_State* L) {
