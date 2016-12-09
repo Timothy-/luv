@@ -67,6 +67,8 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
   switch (events) {
     case UV_READABLE: evtstr = "r"; break;
     case UV_WRITABLE: evtstr = "w"; break;
+    case UV_PRIORITIZED: evtstr = "e"; break;
+    case UV_PRIORITIZED|UV_READABLE: evtstr = "e"; break;
     case UV_READABLE|UV_WRITABLE: evtstr = "rw"; break;
     case UV_DISCONNECT: evtstr = "d"; break;
     case UV_READABLE|UV_DISCONNECT: evtstr = "rd"; break;
@@ -94,6 +96,15 @@ static int luv_poll_start(lua_State* L) {
   }
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_POLL, 3);
   ret = uv_poll_start(handle, events, luv_poll_cb);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_poll_interrupt_start(lua_State* L) {
+  uv_poll_t* handle = luv_check_poll(L, 1);
+  luv_check_callback(L, handle->data, LUV_POLL, 2);
+  int ret = uv_poll_start(handle, UV_PRIORITIZED, luv_poll_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
