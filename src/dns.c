@@ -106,7 +106,8 @@ static int luv_getaddrinfo(lua_State* L) {
       hints->ai_family = luv_af_string_to_num(lua_tostring(L, -1));
     }
     else if (lua_isnil(L, -1)) {
-      hints->ai_family = AF_UNSPEC;
+      // unless overriden force IPv4
+      hints->ai_family = AF_INET;
     }
     else {
       luaL_argerror(L, 3, "family hint must be string if set");
