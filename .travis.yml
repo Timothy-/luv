@@ -12,13 +12,13 @@ env:
   global:
     - LUAROCKS=2.3.0
   matrix:
-    - WITH_LUA_ENGINE=Lua LUA=lua5.3
+    # - WITH_LUA_ENGINE=Lua LUA=lua5.3
     - WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
-    - PROCESS_CLEANUP_TEST=1 LUA=lua5.2
+    # - PROCESS_CLEANUP_TEST=1 LUA=lua5.2
 
 os:
   - linux
-  - osx
+  # - osx
 
 before_install:
   - git submodule update --init --recursive
@@ -26,7 +26,9 @@ before_install:
   - source .ci/setenv_lua.sh
 
 script:
-  - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
+  # - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
+  - make
+  - make test
   # Test rock installation
   - luarocks make
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
@@ -59,5 +61,4 @@ jobs:
         - luarocks upload luv-$TRAVIS_TAG.rockspec --api-key=$LUAROCKS_API_KEY --force
 
 notifications:
-  email: true
-  irc: "irc.freenode.org#luvit"
+  email: false
