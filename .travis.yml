@@ -12,13 +12,13 @@ env:
   global:
     - LUAROCKS=2.3.0
   matrix:
-    - WITH_LUA_ENGINE=Lua LUA=lua5.3
+    # - WITH_LUA_ENGINE=Lua LUA=lua5.3
     - WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
-    - PROCESS_CLEANUP_TEST=1 LUA=lua5.2
+    # - PROCESS_CLEANUP_TEST=1 LUA=lua5.2
 
 os:
   - linux
-  - osx
+  # - osx
 
 before_install:
   - git submodule update --init --recursive
@@ -26,7 +26,9 @@ before_install:
   - source .ci/setenv_lua.sh
 
 script:
-  - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
+  # - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
+  - make
+  - make test
   # Test rock installation
   - luarocks make
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
@@ -38,26 +40,5 @@ script:
   - luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=build
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
 
-jobs:
-  include:
-    - stage: deploy
-      if: tag IS present
-      env: WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
-      script: skip
-      before_deploy:
-        - .ci/make_rockspec.sh $TRAVIS_TAG
-      deploy:
-        provider: releases
-        api_key: $GITHUB_OAUTH_TOKEN
-        file: luv-$TRAVIS_TAG.tar.gz
-        overwrite: true
-        skip_cleanup: true
-        on:
-          tags: true
-      after_deploy:
-        - luarocks install lua-cjson # required for luarocks upload
-        - luarocks upload luv-$TRAVIS_TAG.rockspec --api-key=$LUAROCKS_API_KEY --force
-
 notifications:
-  email: true
-  irc: "irc.freenode.org#luvit"
+  email: false

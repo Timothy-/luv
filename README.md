@@ -1,9 +1,7 @@
 luv
 ===
 
-[![Linux Build Status](https://travis-ci.org/luvit/luv.svg?branch=master)](https://travis-ci.org/luvit/luv)
-
-[![Windows Build status](https://ci.appveyor.com/api/projects/status/uo1qhdcc0vcqsiok/branch/master?svg=true)](https://ci.appveyor.com/project/racker-buildbot/luv/branch/master)
+[![Linux Build Status](https://travis-ci.org/luvitred/luv.svg?branch=master)](https://travis-ci.org/luvitred/luv)
 
 [libuv](https://github.com/libuv/libuv) bindings for
 [luajit](http://luajit.org/) and [lua](http://www.lua.org/)
