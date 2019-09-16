@@ -151,7 +151,6 @@ static int luv_tcp_getpeername(lua_State* L) {
   return 1;
 }
 
-
 static void luv_connect_cb(uv_connect_t* req, int status) {
   lua_State* L = luv_state(req->handle->loop);
   luv_status(L, status);
@@ -189,3 +188,28 @@ static int luv_tcp_connect(lua_State* L) {
   }
   return 1;
 }
+
+#if LUV_UV_VERSION_GEQ(1, 32, 0)
+static void luv_close_reset_cb(uv_handle_t* handle) {
+  lua_State* L = luv_state(handle->loop);
+  luv_handle_t* data = (luv_handle_t*)handle->data;
+  if (!data) return;
+  luv_call_callback(L, data, LUV_RESET, 0);
+  luv_unref_handle(L, data);
+}
+
+static int luv_tcp_close_reset(lua_State* L) {
+  int ret;
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  if (!lua_isnoneornil(L, 2)) {
+    luv_check_callback(L, (luv_handle_t*)handle->data, LUV_RESET, 2);
+  }
+  ret = uv_tcp_close_reset(handle, luv_close_reset_cb);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  return 1;
+}
+#endif
+
